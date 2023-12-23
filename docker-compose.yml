@@ -1,0 +1,72 @@
+version: '3.8'
+services:
+  taylor-made-esthetics:
+    build: ./taylor-made-esthetics
+    ports:
+      - "80:80"
+    depends_on:
+      - medusajs-backend
+
+  taylormade-admin:
+    build: ./taylormade-admin
+    ports:
+      - "81:80"
+
+  medusajs-backend:
+    build:
+      context: ./medusajs-backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://medusa:password@postgres/medusadb
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3002:3002"
+    depends_on:
+      - postgres
+      - redis
+
+  cal-backend:
+    image: calcom/cal.com:latest
+    environment:
+      DATABASE_URL: postgresql://caluser:calpassword@cal-postgres/caldb
+      REDIS_URL: redis://cal-redis:6379
+      # Set other environment variables as needed
+    ports:
+      - "3003:3003"
+    depends_on:
+      - cal-postgres
+      - cal-redis
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: medusa
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: medusadb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redis-data:/data
+
+  cal-postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: caluser
+      POSTGRES_PASSWORD: calpassword
+      POSTGRES_DB: caldb
+    volumes:
+      - cal-postgres-data:/var/lib/postgresql/data
+
+  cal-redis:
+    image: redis:6-alpine
+    volumes:
+      - cal-redis-data:/data
+
+volumes:
+  postgres-data:
+  redis-data:
+  cal-postgres-data:
+  cal-redis-data:
